@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: credit-scoring-db
+    environment:
+      POSTGRES_USER: credituser
+      POSTGRES_PASSWORD: creditpass
+      POSTGRES_DB: credit_scoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U credituser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: credit-scoring-api
+    environment:
+      DATABASE_URL: postgresql://credituser:creditpass@postgres:5432/credit_scoring
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      MODEL_PATH: /app/models/xgboost_model.pkl
+      SHAP_EXPLAINER_PATH: /app/models/shap_explainer.pkl
+      FEATURE_NAMES_PATH: /app/models/feature_names.pkl
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: credit-scoring-ui
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

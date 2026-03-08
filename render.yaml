@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: ai-credit-scoring-backend
+    env: python
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-credit-scoring-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_HOURS
+        value: 24
+      - key: MODEL_PATH
+        value: models/xgboost_model.pkl
+      - key: FEATURE_NAMES_PATH
+        value: models/feature_names.pkl
+      - key: SHAP_EXPLAINER_PATH
+        value: models/shap_explainer.pkl
+
+  - type: web
+    name: ai-credit-scoring-frontend
+    env: node
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm run preview -- --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: VITE_API_URL
+        value: https://ai-credit-scoring-backend.onrender.com
+
+databases:
+  - name: ai-credit-scoring-db
+    databaseName: creditscoring
+    user: credituser
