@@ -24,7 +24,11 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Credit Scoring Platform"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
-    
+
+    # Email
+    GMAIL_ADDRESS: str = ""
+    GMAIL_APP_PASSWORD: str = ""
+    FRONTEND_URL: str = "http://localhost:3000"
     class Config:
         env_file = ".env"
         case_sensitive = True

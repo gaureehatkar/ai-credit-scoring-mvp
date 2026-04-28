@@ -33,7 +33,6 @@ class PredictionService:
         """Extract and engineer features from application data"""
         alt_data = application_data.alternative_data
         
-        # Map alternative data to model's expected features
         # The model expects these 13 features from the Kaggle dataset:
         # age, age_squared, DebtRatio, debt_ratio_log, MonthlyIncome, monthly_income_log,
         # NumberOfOpenCreditLinesAndLoans, NumberOfTimes90DaysLate, NumberRealEstateLoansOrLines,
@@ -41,66 +40,83 @@ class PredictionService:
         
         features = {}
         
-        # Direct mappings
+        # --- Age ---
         features['age'] = float(application_data.age)
         features['age_squared'] = float(application_data.age ** 2)
-        features['MonthlyIncome'] = float(alt_data.monthly_income if alt_data.monthly_income else 5000.0)
-        features['monthly_income_log'] = float(np.log1p(features['MonthlyIncome']))
-        
-        # Estimate DebtRatio from requested amount and income
-        if features['MonthlyIncome'] > 0:
-            features['DebtRatio'] = float(application_data.requested_amount / (features['MonthlyIncome'] * 12))
+
+        # --- Income & Expenses ---
+        monthly_income = float(alt_data.monthly_income or 5000.0)
+        monthly_expenses = float(alt_data.monthly_expenses or monthly_income * 0.6)
+        disposable_income = max(monthly_income - monthly_expenses, 0)
+        features['MonthlyIncome'] = monthly_income
+        features['monthly_income_log'] = float(np.log1p(monthly_income))
+
+        # --- Debt Ratio: use existing loans + requested amount vs annual income ---
+        existing_loan_count = int(alt_data.existing_loan_count or 0)
+        # Estimate existing monthly debt obligation (avg ₹5000 per loan)
+        estimated_existing_debt = existing_loan_count * 5000
+        total_monthly_debt = estimated_existing_debt + (application_data.requested_amount / 36)
+        if monthly_income > 0:
+            features['DebtRatio'] = float(total_monthly_debt / monthly_income)
         else:
-            features['DebtRatio'] = 0.5
+            features['DebtRatio'] = 1.0
         features['debt_ratio_log'] = float(np.log1p(features['DebtRatio']))
-        
-        # Map alternative data to traditional credit features
+
+        # --- Dependents ---
+        features['NumberOfDependents'] = int(alt_data.number_of_dependents if alt_data.number_of_dependents is not None else 2)
+
+        # --- Employment stability bonus/penalty ---
+        # More years in employment = more stable = fewer estimated late payments
+        stability_years = float(alt_data.employment_stability_years or 1.0)
+        stability_factor = min(stability_years / 5.0, 1.0)  # caps at 1.0 after 5 years
+
+        # --- Utility bill payment score (0-10) ---
+        utility_score = float(alt_data.utility_bill_payment_score or 5.0)
+
+        # --- Loan repayment history score (0-10) ---
+        repayment_score = float(alt_data.loan_repayment_history_score or 5.0)
+
+        # --- Map alternative data to traditional credit features ---
         if application_data.applicant_type == "underbanked":
-            # Use gig rating and UPI frequency to estimate creditworthiness
-            gig_rating = alt_data.gig_platform_rating or 3.0
-            upi_freq = alt_data.upi_transaction_frequency or 10
-            savings = alt_data.savings_account_balance or 0
-            
-            # Estimate credit lines based on digital activity
-            features['NumberOfOpenCreditLinesAndLoans'] = int(max(1, upi_freq / 10))
-            
-            # Estimate late payments inversely from gig rating (higher rating = fewer late payments)
-            features['NumberOfTimes90DaysLate'] = int(max(0, 5 - gig_rating))
-            features['NumberOfTime60-89DaysPastDueNotWorse'] = int(max(0, 4 - gig_rating))
-            
-            # Estimate real estate from savings
+            gig_rating = float(alt_data.gig_platform_rating or 3.0)
+            upi_freq = int(alt_data.upi_transaction_frequency or 10)
+            savings = float(alt_data.savings_account_balance or 0)
+
+            # Credit lines: UPI activity + existing loans
+            features['NumberOfOpenCreditLinesAndLoans'] = int(max(1, upi_freq / 10 + existing_loan_count))
+
+            # Late payments: inversely from gig rating + repayment history + utility score
+            combined_behavior_score = (gig_rating / 5.0 * 4 + repayment_score / 10.0 * 3 + utility_score / 10.0 * 3)
+            features['NumberOfTimes90DaysLate'] = int(max(0, round((1 - combined_behavior_score / 10) * 5 * (1 - stability_factor * 0.3))))
+            features['NumberOfTime60-89DaysPastDueNotWorse'] = int(max(0, round((1 - combined_behavior_score / 10) * 4 * (1 - stability_factor * 0.3))))
+
+            # Real estate from savings
             features['NumberRealEstateLoansOrLines'] = 1 if savings > 50000 else 0
             features['has_real_estate'] = 1 if savings > 50000 else 0
-            
+
         elif application_data.applicant_type == "unbanked":
-            # Use community score and remittances to estimate creditworthiness
-            community_score = alt_data.community_verification_score or 5.0
-            remittance_freq = alt_data.remittance_frequency or 0
-            microfinance_count = alt_data.microfinance_repayment_count or 0
-            
-            # Estimate credit lines from microfinance history
-            features['NumberOfOpenCreditLinesAndLoans'] = int(max(1, microfinance_count))
-            
-            # Estimate late payments inversely from community score
-            features['NumberOfTimes90DaysLate'] = int(max(0, 10 - community_score))
-            features['NumberOfTime60-89DaysPastDueNotWorse'] = int(max(0, 8 - community_score))
-            
-            # No real estate for unbanked
+            community_score = float(alt_data.community_verification_score or 5.0)
+            remittance_freq = int(alt_data.remittance_frequency or 0)
+            microfinance_count = int(alt_data.microfinance_repayment_count or 0)
+
+            # Credit lines: microfinance + existing loans
+            features['NumberOfOpenCreditLinesAndLoans'] = int(max(1, microfinance_count + existing_loan_count))
+
+            # Late payments: from community score + repayment history + utility score
+            combined_behavior_score = (community_score / 10.0 * 4 + repayment_score / 10.0 * 3 + utility_score / 10.0 * 3)
+            features['NumberOfTimes90DaysLate'] = int(max(0, round((1 - combined_behavior_score / 10) * 8 * (1 - stability_factor * 0.3))))
+            features['NumberOfTime60-89DaysPastDueNotWorse'] = int(max(0, round((1 - combined_behavior_score / 10) * 6 * (1 - stability_factor * 0.3))))
+
             features['NumberRealEstateLoansOrLines'] = 0
             features['has_real_estate'] = 0
-        
-        # Estimate dependents (default to 2)
-        features['NumberOfDependents'] = 2
-        
-        # Calculate total late payments
+
+        # --- Total late payments ---
         features['total_late_payments'] = (
-            features['NumberOfTimes90DaysLate'] + 
+            features['NumberOfTimes90DaysLate'] +
             features['NumberOfTime60-89DaysPastDueNotWorse']
         )
-        
-        # Ensure all features are in the correct order matching the trained model
+
         feature_names = self.expected_features
-        
         return FeatureVector(features=features, feature_names=feature_names)
     
     def predict_credit_score(self, features: FeatureVector) -> CreditScoreResult:

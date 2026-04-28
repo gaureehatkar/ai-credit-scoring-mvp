@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, applications, admin
+from app.api import auth, applications, admin, admin_auth, admin_users, admin_applications, admin_analytics
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,10 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(applications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin_auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin_users.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin_applications.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin_analytics.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")

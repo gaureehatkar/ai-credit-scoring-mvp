@@ -1,180 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(195 20% 98%);
+  --color-foreground: hsl(222 47% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222 47% 11%);
+  --color-border: hsl(214 32% 91%);
+  --color-input: hsl(214 32% 91%);
+  --color-primary: hsl(173 80% 32%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(222 47% 11%);
+  --color-secondary-foreground: hsl(210 40% 98%);
+  --color-muted: hsl(210 40% 96%);
+  --color-muted-foreground: hsl(215 16% 47%);
+  --color-accent: hsl(210 40% 96%);
+  --color-accent-foreground: hsl(222 47% 11%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-ring: hsl(173 80% 32%);
+  --color-sidebar: hsl(222 47% 11%);
+  --color-sidebar-foreground: hsl(210 40% 98%);
+  --color-sidebar-accent: hsl(217 33% 17%);
+  --color-sidebar-accent-foreground: hsl(210 40% 98%);
+  --color-sidebar-primary: hsl(173 80% 32%);
+  --color-sidebar-primary-foreground: hsl(0 0% 100%);
+  --color-sidebar-border: hsl(217 33% 17%);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --radius: 0.75rem;
+}
+
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  border-color: var(--color-border);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.card {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #333;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: #4CAF50;
-}
-
-button {
-  padding: 12px 24px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #f44336;
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.success {
-  color: #4CAF50;
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.navbar {
-  background-color: #2c3e50;
-  color: white;
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.navbar h1 {
-  font-size: 20px;
-}
-
-.navbar nav a {
-  color: white;
-  text-decoration: none;
-  margin-left: 20px;
-}
-
-.navbar nav a:hover {
-  text-decoration: underline;
-}
-
-.score-display {
-  text-align: center;
-  padding: 32px;
-}
-
-.score-value {
-  font-size: 64px;
-  font-weight: bold;
-  color: #4CAF50;
-}
-
-.risk-badge {
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 500;
-  margin-top: 16px;
-}
-
-.risk-low {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.risk-medium {
-  background-color: #FF9800;
-  color: white;
-}
-
-.risk-high {
-  background-color: #f44336;
-  color: white;
-}
-
-.shap-explanation {
-  margin-top: 24px;
-}
-
-.shap-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.shap-positive {
-  color: #4CAF50;
-}
-
-.shap-negative {
-  color: #f44336;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-
-tr:hover {
-  background-color: #f9f9f9;
 }

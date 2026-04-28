@@ -16,8 +16,14 @@ export interface TokenResponse {
 
 export interface AlternativeData {
   monthly_income?: number;
+  monthly_expenses?: number;
   utility_payment_history?: string;
   employment_type?: string;
+  employment_stability_years?: number;
+  number_of_dependents?: number;
+  existing_loan_count?: number;
+  loan_repayment_history_score?: number;
+  utility_bill_payment_score?: number;
   remittance_frequency?: number;
   community_verification_score?: number;
   microfinance_repayment_count?: number;
@@ -35,6 +41,7 @@ export interface CreditApplication {
   requested_amount: number;
   loan_purpose: string;
   alternative_data: AlternativeData;
+  document_links?: Record<string, string>;
 }
 
 export interface ApplicationResponse {

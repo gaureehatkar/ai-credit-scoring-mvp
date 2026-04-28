@@ -17,6 +17,7 @@ class Application(Base):
     requested_amount = Column(Float, nullable=False)
     loan_purpose = Column(String, nullable=False)
     alternative_data = Column(JSON, nullable=False)
+    document_links = Column(JSON, nullable=True)  # Optional supporting document URLs
     status = Column(String, default="pending", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

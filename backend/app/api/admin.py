@@ -11,7 +11,7 @@ from app.models.application import Application
 from app.config import settings
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin-legacy", tags=["admin-legacy"])
 
 
 def get_prediction_service():
