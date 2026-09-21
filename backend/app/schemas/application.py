@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from enum import Enum
 
@@ -14,6 +14,48 @@ class ApplicationStatus(str, Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     UNDER_REVIEW = "under_review"
+
+
+# ---------------------------------------------------------------------------
+# Decision mode types (research paper: D1–D4)
+# ---------------------------------------------------------------------------
+
+class DecisionMode(str, Enum):
+    D1 = "D1"   # ML Risk Model only
+    D2 = "D2"   # ML + Policy Eligibility
+    D3 = "D3"   # ML + Evidence Quality
+    D4 = "D4"   # ML + Policy + Evidence (full system)
+
+
+class DecisionOutcome(str, Enum):
+    APPROVE = "APPROVE"
+    REVIEW  = "REVIEW"
+    DECLINE = "DECLINE"
+
+
+class EvidenceResponse(BaseModel):
+    score: float
+    status: str          # "SUFFICIENT" | "INSUFFICIENT"
+    history_months: int
+    aa_completeness: float
+    uli_completeness: float
+    threshold: float
+
+
+class PolicyRuleResult(BaseModel):
+    rule_id: str
+    condition: str
+    state: str
+    attribute_value: Optional[str] = None
+    note: str = ""
+
+
+class PolicyResponse(BaseModel):
+    scheme: str
+    state: str           # "SATISFIED" | "UNSATISFIED" | "UNRESOLVED"
+    reason: str
+    rule_results: List[PolicyRuleResult] = []
+    provenance_note: str = ""
 
 
 class AlternativeDataInput(BaseModel):
@@ -48,7 +90,9 @@ class CreditApplicationCreate(BaseModel):
     requested_amount: float = Field(..., gt=0)
     loan_purpose: str
     alternative_data: AlternativeDataInput
-    document_links: Optional[dict] = None  # e.g. {"income_proof": "https://...", "gig_rating": "https://..."}
+    document_links: Optional[dict] = None
+    # Research paper: which decision mode to use (default D4 = full system)
+    decision_mode: DecisionMode = DecisionMode.D4
 
 
 class CreditApplicationResponse(BaseModel):
@@ -61,7 +105,14 @@ class CreditApplicationResponse(BaseModel):
     risk_category: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    
+
+    # Research paper: new fields
+    decision_mode: Optional[str] = None
+    decision: Optional[str] = None
+    reason_code: Optional[str] = None
+    evidence: Optional[EvidenceResponse] = None
+    policy: Optional[PolicyResponse] = None
+
     class Config:
         from_attributes = True
 

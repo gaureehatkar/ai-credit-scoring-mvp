@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, applications, admin, admin_auth, admin_users, admin_applications, admin_analytics
+from app.api import auth, applications, admin, admin_auth, admin_users, admin_applications, admin_analytics, research
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
